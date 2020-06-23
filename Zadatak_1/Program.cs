@@ -35,6 +35,7 @@ namespace Zadatak_1
 
             for (int i = 1; i <= 10; i++)
             {
+                
                 Thread t = new Thread(LoadTruck);
                 t.Name = "Truck_" + i.ToString();
                 t.Start();
