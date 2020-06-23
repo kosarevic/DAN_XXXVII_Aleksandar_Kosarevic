@@ -12,6 +12,8 @@ namespace Zadatak_1
         public static Random r = new Random();
         public static SemaphoreSlim semaphore = new SemaphoreSlim(2, 2);
         public static List<Truck> LoadedTrucks = new List<Truck>();
+        public static object TheLock = new object();
+        public static int counter = 0;
 
         static void Main(string[] args)
         {
@@ -33,17 +35,17 @@ namespace Zadatak_1
             }
 
             bestRoutes.Sort();
+
             Thread t = new Thread(LoadTruck);
 
-            for (int i = 1; i <= 10; i++)
+            for (int j = 1; j <= 10; j++)
             {
                 t = new Thread(LoadTruck);
-                t.Name = "Truck_" + i.ToString();
+                t.Name = "Truck_" + j.ToString();
                 t.Start();
             }
 
-            t.Join();
-            Thread.Sleep(100);
+            while (counter != 10) { }
 
             int count = 0;
 
@@ -51,14 +53,16 @@ namespace Zadatak_1
             {
                 truck.Route = bestRoutes[count];
                 count++;
-                Console.WriteLine(truck.Route);
             }
 
-            for (int i = 0; i < LoadedTrucks.Count(); i++)
+
+            foreach (Truck truck in LoadedTrucks)
             {
-                Thread t1 = new Thread(Destination);
+                Thread t1 = new Thread(() => Destination(truck));
                 t1.Start();
             }
+
+
 
             Console.ReadLine();
         }
@@ -66,21 +70,47 @@ namespace Zadatak_1
         public static void LoadTruck()
         {
             Truck truck = new Truck();
-            truck.LoadTime = r.Next(500, 2000);
+            truck.LoadTime = r.Next(500, 5000);
+            truck.Name = Thread.CurrentThread.Name;
 
-            semaphore.Wait();
+            while (true)
+            {
+                if (counter % 2 == 0 && semaphore.CurrentCount == 2 || counter == 0)
+                {
+                    semaphore.Wait();
 
-            LoadedTrucks.Add(truck);
-            Thread.Sleep(truck.LoadTime);
-            Console.WriteLine(Thread.CurrentThread.Name);
+                    Console.WriteLine(truck.Name + " has started loading. ({0})", truck.LoadTime);
+                    Thread.Sleep(truck.LoadTime);
+                    LoadedTrucks.Add(truck);
+                    Console.WriteLine(truck.Name + " has been loaded.");
 
-            semaphore.Release();
-            
+                    semaphore.Release();
+
+                    break;
+                }
+            }
+            counter++;
         }
 
-        public static void Destination()
+        public static void Destination(Truck truck)
         {
-            Console.WriteLine();
+            int time = r.Next(500, 5000);
+            Console.WriteLine(truck.Name + " has started {0} route, and will arrive at destination in: {1}", truck.Route, time);
+
+            if (time <= 3000)
+            {
+                Thread.Sleep(time);
+                Console.WriteLine("{0} has successfully reached its destination and is now begining to unload.", truck.Name);
+                Thread.Sleep(truck.LoadTime / 2);
+                Console.WriteLine("{0} has been successfully unloaded.", truck.Name);
+            }
+            else
+            {
+                Thread.Sleep(3001);
+                Console.WriteLine("{0} has failed to deliver in time and is turning back.", truck.Name);
+            }
+
+
         }
     }
 }
