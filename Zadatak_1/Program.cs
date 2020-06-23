@@ -10,7 +10,8 @@ namespace Zadatak_1
     class Program
     {
         public static Random r = new Random();
-        public static SemaphoreSlim semaphore = new SemaphoreSlim(2);
+        public static SemaphoreSlim semaphore = new SemaphoreSlim(2, 2);
+        public static List<Truck> LoadedTrucks = new List<Truck>();
 
         static void Main(string[] args)
         {
@@ -32,13 +33,31 @@ namespace Zadatak_1
             }
 
             bestRoutes.Sort();
+            Thread t = new Thread(LoadTruck);
 
             for (int i = 1; i <= 10; i++)
             {
-                
-                Thread t = new Thread(LoadTruck);
+                t = new Thread(LoadTruck);
                 t.Name = "Truck_" + i.ToString();
                 t.Start();
+            }
+
+            t.Join();
+            Thread.Sleep(100);
+
+            int count = 0;
+
+            foreach (Truck truck in LoadedTrucks)
+            {
+                truck.Route = bestRoutes[count];
+                count++;
+                Console.WriteLine(truck.Route);
+            }
+
+            for (int i = 0; i < LoadedTrucks.Count(); i++)
+            {
+                Thread t1 = new Thread(Destination);
+                t1.Start();
             }
 
             Console.ReadLine();
@@ -46,14 +65,22 @@ namespace Zadatak_1
 
         public static void LoadTruck()
         {
-            int time = r.Next(500, 5000);
+            Truck truck = new Truck();
+            truck.LoadTime = r.Next(500, 2000);
 
             semaphore.Wait();
 
-            Thread.Sleep(time);
+            LoadedTrucks.Add(truck);
+            Thread.Sleep(truck.LoadTime);
             Console.WriteLine(Thread.CurrentThread.Name);
 
             semaphore.Release();
+            
+        }
+
+        public static void Destination()
+        {
+            Console.WriteLine();
         }
     }
 }
