@@ -56,6 +56,14 @@ namespace Zadatak_1
                 }
                 //After separation, numbers are sorted in a list.
                 bestRoutes.Sort();
+
+                if (s.Elapsed.Milliseconds < 3001)
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine("Shortest routes are generated successfully. (time: {0} ms)\n", s.ElapsedMilliseconds);
+                    Console.ResetColor();
+                    s.Stop();
+                }
             }
 
             //Condition added if stopwatch exceeds 3000ms, alternative process takes place.
@@ -70,13 +78,13 @@ namespace Zadatak_1
                         line = sr.ReadLine();
                         bestRoutes.Add(int.Parse(line));
                     }
+
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Shortest routes are not generated successfully. (time: {0} ms)\n", s.ElapsedMilliseconds);
+                    Console.ResetColor();
+                    s.Stop();
                 }
             }
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Routes are generated successfully. (time: {0} ms)\n", s.ElapsedMilliseconds);
-            Console.ResetColor();
-
-            s.Stop();
             //Trucks loading process starts here.
             for (int j = 1; j <= 10; j++)
             {
@@ -150,7 +158,7 @@ namespace Zadatak_1
             {
                 Thread.Sleep(time);
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine("{0} has successfully reached its destination and is now begining to unload.", truck.Name);
+                Console.WriteLine("{0} has successfully reached its destination and is now begining to unload. (unload time: {1} ms)", truck.Name, (int)(truck.LoadTime / 1.5));
                 Thread.Sleep((int)(truck.LoadTime / 1.5));
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine("{0} has been successfully unloaded.", truck.Name);
