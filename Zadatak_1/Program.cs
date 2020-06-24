@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -18,34 +20,60 @@ namespace Zadatak_1
         static void Main(string[] args)
         {
             int[] routes = new int[1000];
+            List<int> bestRoutes = new List<int>();
+            Stopwatch s = new Stopwatch();
+            s.Start();
 
             for (int i = 0; i < routes.Length; i++)
             {
                 routes[i] = r.Next(1, 5000);
             }
 
-            List<int> bestRoutes = new List<int>();
-
-            for (int i = 0; i < routes.Length; i++)
+            using (StreamWriter sw = new StreamWriter("..//..//Files/Routes.txt"))
             {
-                if (routes[i] % 3 == 0)
+                foreach (int i in routes)
                 {
-                    bestRoutes.Add(routes[i]);
+                    sw.WriteLine(i);
+                }
+            }
+            
+            string line = "";
+            using (StreamReader sr = new StreamReader("..//..//Files/Routes.txt"))
+            {
+                while ((line = sr.ReadLine()) != null && s.Elapsed.Milliseconds < 3001)
+                {
+                    int route = int.Parse(line);
+                    if (route % 3 == 0)
+                    {
+                        bestRoutes.Add(route);
+                    }
                 }
             }
 
-            bestRoutes.Sort();
+            if(s.Elapsed.Milliseconds > 3000)
+            {
+                int randomRoutes = r.Next(10, 1000);
 
-            Thread t = new Thread(LoadTruck);
+
+            }
+            
+            s.Stop();
+            bestRoutes.Sort();
 
             for (int j = 1; j <= 10; j++)
             {
-                t = new Thread(LoadTruck);
+                Thread t = new Thread(LoadTruck);
                 t.Name = "Truck_" + j.ToString();
+                Thread t1 = new Thread(LoadTruck);
+                t1.Name = "Truck_" + (j + 1).ToString();
                 t.Start();
+                t1.Start();
+                t.Join();
+                t1.Join();
+                j += 1;
             }
 
-            while (counter != 10) { }
+            Console.WriteLine();
 
             int count = 0;
 
@@ -55,14 +83,11 @@ namespace Zadatak_1
                 count++;
             }
 
-
             foreach (Truck truck in LoadedTrucks)
             {
-                Thread t1 = new Thread(() => Destination(truck));
-                t1.Start();
+                Thread t = new Thread(() => Destination(truck));
+                t.Start();
             }
-
-
 
             Console.ReadLine();
         }
@@ -73,22 +98,15 @@ namespace Zadatak_1
             truck.LoadTime = r.Next(500, 5000);
             truck.Name = Thread.CurrentThread.Name;
 
-            while (true)
-            {
-                if (counter % 2 == 0 && semaphore.CurrentCount == 2 || counter == 0)
-                {
-                    semaphore.Wait();
+            semaphore.Wait();
 
-                    Console.WriteLine(truck.Name + " has started loading. ({0})", truck.LoadTime);
-                    Thread.Sleep(truck.LoadTime);
-                    LoadedTrucks.Add(truck);
-                    Console.WriteLine(truck.Name + " has been loaded.");
+            Console.WriteLine(truck.Name + " has started loading. ({0})", truck.LoadTime);
+            Thread.Sleep(truck.LoadTime);
+            LoadedTrucks.Add(truck);
+            Console.WriteLine(truck.Name + " has been loaded.");
 
-                    semaphore.Release();
+            semaphore.Release();
 
-                    break;
-                }
-            }
             counter++;
         }
 
