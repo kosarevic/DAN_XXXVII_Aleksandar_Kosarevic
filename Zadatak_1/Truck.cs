@@ -10,14 +10,14 @@ namespace Zadatak_1
     {
 
         public int Route { get; set; }
-        public int LoadTime { get; set; }
+        public double LoadTime { get; set; }
         public string Name { get; set; }
 
         public Truck()
         {
         }
 
-        public Truck(int route, int loadTime, string name)
+        public Truck(int route, double loadTime, string name)
         {
             Route = route;
             LoadTime = loadTime;
